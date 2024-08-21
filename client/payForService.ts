@@ -16,7 +16,7 @@ const program = pg.program;
 
 const payForService = async () => {
   const servicePublicKey = new PublicKey(
-    "DBZDUGpfd8N6Um1fQ5H8cUfdEAkxENLkBhhcpWSTg763"
+    "Be3Bp42T1yodfnCZyCRiRppaccF86jP5KCbiKcyc6haA"
   );
   const amount = new anchor.BN(100); // Example amount in lamports
 
@@ -25,7 +25,7 @@ const payForService = async () => {
     program.programId
   );
 
-  const [paymentStatus, statusBump] = PublicKey.findProgramAddressSync(
+  const [paymentStatus, paymentStatusPda] = PublicKey.findProgramAddressSync(
     [
       Buffer.from("status"),
       servicePublicKey.toBuffer(),
@@ -39,8 +39,7 @@ const payForService = async () => {
     .accounts({
       vaultAccount: vaultPda,
       serviceAccount: servicePublicKey,
-      payer: wallet.publicKey, // payer for transaction
-      paymentStatus,
+      paymentStatus: paymentStatusPda,
       systemProgram: SystemProgram.programId,
     })
     .rpc({ commitment: "confirmed" });

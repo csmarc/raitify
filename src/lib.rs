@@ -1,8 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::System;
-use anchor_lang::system_program::{transfer, Transfer};
+use anchor_lang::system_program::{transfer, System, Transfer};
 
-declare_id!("9x776kuQbwEAiDH24Em8UipD37qozqSsdabrMWgBo9fW");
+declare_id!("GoerBKPNMXA2QmoH9bNPA7LDERVMhN4b5t5uzWx8Ft8c");
 
 #[program]
 pub mod service_platform {
@@ -27,7 +26,7 @@ pub mod service_platform {
 
     pub fn pay_for_service(ctx: Context<PayForService>, amount: u64) -> Result<()> {
         let transfer_accounts = Transfer {
-            from: ctx.accounts.payer.to_account_info(),
+            from: ctx.accounts.user.to_account_info(),
             to: ctx.accounts.vault_account.to_account_info(),
         };
         let cpi_context = CpiContext::new(
@@ -38,7 +37,7 @@ pub mod service_platform {
 
         let payment_status = &mut ctx.accounts.payment_status;
         payment_status.service_id = ctx.accounts.service_account.key();
-        payment_status.payer = *ctx.accounts.payer.key;
+        payment_status.payer = *ctx.accounts.user.key;
         payment_status.paid = true;
         Ok(())
     }
@@ -62,9 +61,11 @@ pub struct RegisterService<'info> {
 
 #[derive(Accounts)]
 pub struct PayForService<'info> {
+    #[account(mut)]
+    pub user: Signer<'info>,
     #[account(
         init,
-        payer = payer,
+        payer = user,
         seeds = [b"vault", service_account.key().as_ref()],
         bump,
         space = 8
@@ -73,9 +74,8 @@ pub struct PayForService<'info> {
 
     #[account(mut)]
     pub service_account: Account<'info, ServiceAccount>,
-    #[account(mut)]
-    pub payer: Signer<'info>,
-    #[account(init, payer = payer, space = 8 + 32 + 32 + 1)]
+
+    #[account(init, payer = user, space = 8 + 32 + 32 + 1)]
     pub payment_status: Account<'info, PaymentStatus>,
     pub system_program: Program<'info, System>,
 }
