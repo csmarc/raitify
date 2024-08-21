@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, System, Transfer};
 
-declare_id!("GoerBKPNMXA2QmoH9bNPA7LDERVMhN4b5t5uzWx8Ft8c");
+declare_id!("6qEzpDYoYmPJNdsfnAGU7pR5KWgc8qjGtUg6eG9W1Hst");
 
 #[program]
 pub mod service_platform {
@@ -24,23 +24,26 @@ pub mod service_platform {
         Ok(())
     }
 
-    pub fn pay_for_service(ctx: Context<PayForService>, amount: u64) -> Result<()> {
-        let transfer_accounts = Transfer {
-            from: ctx.accounts.user.to_account_info(),
-            to: ctx.accounts.vault_account.to_account_info(),
-        };
-        let cpi_context = CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            transfer_accounts,
-        );
-        transfer(cpi_context, amount)?;
+    // pub fn pay_for_service(ctx: Context<PayForService>, amount: u64) -> Result<()> {
+    //     let estelle_pubkey =
+    //         Pubkey::from_str("HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc").unwrap();
 
-        let payment_status = &mut ctx.accounts.payment_status;
-        payment_status.service_id = ctx.accounts.service_account.key();
-        payment_status.payer = *ctx.accounts.user.key;
-        payment_status.paid = true;
-        Ok(())
-    }
+    //     let transfer_accounts = Transfer {
+    //         from: ctx.accounts.user.to_account_info(),
+    //         to: ctx.accounts.vault_account.to_account_info(),
+    //     };
+    //     let cpi_context = CpiContext::new(
+    //         ctx.accounts.system_program.to_account_info(),
+    //         transfer_accounts,
+    //     );
+    //     transfer(cpi_context, amount)?;
+
+    //     let payment_status = &mut ctx.accounts.payment_status;
+    //     payment_status.service_id = ctx.accounts.service_account.key();
+    //     payment_status.payer = *ctx.accounts.user.key;
+    //     payment_status.paid = true;
+    //     Ok(())
+    // }
 }
 
 #[derive(Accounts)]
@@ -59,26 +62,21 @@ pub struct RegisterService<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[derive(Accounts)]
-pub struct PayForService<'info> {
-    #[account(mut)]
-    pub user: Signer<'info>,
-    #[account(
-        init,
-        payer = user,
-        seeds = [b"vault", service_account.key().as_ref()],
-        bump,
-        space = 8
-    )]
-    pub vault_account: Account<'info, VaultAccount>,
+// #[derive(Accounts)]
+// pub struct PayForService<'info> {
+//     #[account(mut)]
+//     pub user: Signer<'info>,
 
-    #[account(mut)]
-    pub service_account: Account<'info, ServiceAccount>,
+//     #[account(mut, address = Pubkey::from_str("HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc").unwrap())]
+//     pub estelle_account: AccountInfo<'info>,
 
-    #[account(init, payer = user, space = 8 + 32 + 32 + 1)]
-    pub payment_status: Account<'info, PaymentStatus>,
-    pub system_program: Program<'info, System>,
-}
+//     #[account(mut)]
+//     pub service_account: Account<'info, ServiceAccount>,
+
+//     #[account(init, payer = user, space = 8 + 32 + 32 + 1)]
+//     pub payment_status: Account<'info, PaymentStatus>,
+//     pub system_program: Program<'info, System>,
+// }
 
 #[account]
 pub struct ServiceAccount {
@@ -87,11 +85,6 @@ pub struct ServiceAccount {
     pub price: u64,          // 8 bytes
     pub rating: u8,          // 1 byte
     pub bump: u8,            // 1 byte
-}
-
-#[account]
-pub struct VaultAccount {
-    pub bump: u8, // 1 byte
 }
 
 #[account]
