@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, System, Transfer};
+use anchor_lang::system_program::System;
 
-declare_id!("6qEzpDYoYmPJNdsfnAGU7pR5KWgc8qjGtUg6eG9W1Hst");
+declare_id!("FKRcWWfVPQGJ6kaEKAXbL4GAJcHB4erzQGBkNUjZ5QaE");
 
 #[program]
 pub mod service_platform {
@@ -24,24 +24,31 @@ pub mod service_platform {
         Ok(())
     }
 
-    // pub fn pay_for_service(ctx: Context<PayForService>, amount: u64) -> Result<()> {
-    //     let estelle_pubkey =
-    //         Pubkey::from_str("HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc").unwrap();
+    // pub fn mark_payment_done(ctx: Context<MarkPaymentDone>, amount: u64) -> Result<()> {
+    //     let payment_status = &mut ctx.accounts.payment_status;
+    //     payment_status.service_id = ctx.accounts.service_account.key();
+    //     payment_status.payer = *ctx.accounts.user.key;
+    //     payment_status.paid = true;
+    //     Ok(())
+    // }
 
+    // pub fn mark_job_done(
+    //     ctx: Context<MarkJobDone>,
+    //     rating: u8,
+    // ) -> Result<()> {
+    //     let service_account = &mut ctx.accounts.service_account;
     //     let transfer_accounts = Transfer {
-    //         from: ctx.accounts.user.to_account_info(),
-    //         to: ctx.accounts.vault_account.to_account_info(),
+    //         from: ctx.accounts.escrow.to_account_info(),
+    //         to: ctx.accounts.alice.to_account_info(),
     //     };
     //     let cpi_context = CpiContext::new(
     //         ctx.accounts.system_program.to_account_info(),
     //         transfer_accounts,
     //     );
-    //     transfer(cpi_context, amount)?;
+    //     transfer(cpi_context, service_account.price)?;
 
-    //     let payment_status = &mut ctx.accounts.payment_status;
-    //     payment_status.service_id = ctx.accounts.service_account.key();
-    //     payment_status.payer = *ctx.accounts.user.key;
-    //     payment_status.paid = true;
+    //     service_account.rating = rating;
+
     //     Ok(())
     // }
 }
@@ -63,12 +70,9 @@ pub struct RegisterService<'info> {
 }
 
 // #[derive(Accounts)]
-// pub struct PayForService<'info> {
+// pub struct MarkPaymentDone<'info> {
 //     #[account(mut)]
 //     pub user: Signer<'info>,
-
-//     #[account(mut, address = Pubkey::from_str("HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc").unwrap())]
-//     pub estelle_account: AccountInfo<'info>,
 
 //     #[account(mut)]
 //     pub service_account: Account<'info, ServiceAccount>,
@@ -76,6 +80,15 @@ pub struct RegisterService<'info> {
 //     #[account(init, payer = user, space = 8 + 32 + 32 + 1)]
 //     pub payment_status: Account<'info, PaymentStatus>,
 //     pub system_program: Program<'info, System>,
+// }
+
+// #[derive(Accounts)]
+// pub struct MarkJobDone<'info> {
+//     #[account(mut)]
+//     pub user: Signer<'info>, // Bob
+
+//     #[account(mut, has_one = user)] // Ensure this is Bob's account
+//     pub service_account: Account<'info, ServiceAccount>,
 // }
 
 #[account]

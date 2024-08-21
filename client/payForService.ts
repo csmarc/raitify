@@ -1,12 +1,9 @@
 import {
-  LAMPORTS_PER_SOL,
-  Connection,
   Keypair,
   SystemProgram,
   Transaction,
   sendAndConfirmTransaction,
   PublicKey,
-  clusterApiUrl,
 } from "@solana/web3.js";
 
 import * as anchor from "@project-serum/anchor";
@@ -14,13 +11,14 @@ import * as anchor from "@project-serum/anchor";
 const wallet = pg.wallet;
 const program = pg.program;
 
-const sender = pg.wallet.keypair;
+const sender = wallet.keypair;
 
+// MOCK escrow account
 const estellePubkey = new PublicKey(
   "HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc"
 );
 
-const lamports = 100;
+const lamports = 1000000;
 
 const payForService = async () => {
   // Create transfer instruction
@@ -40,30 +38,25 @@ const payForService = async () => {
     [sender] // Signer array
   );
 
+  //MOCK Escrow marks service_id as paid
+  const servicePublicKey = new PublicKey(
+    "7Amm9JFWXYBbMcVbXQ1q68Hjt9fj3ZpWKkD6kdpHGsvW"
+  );
+  // const tx2 = await program.methods
+  //   .markServiceAsPaid(servicePublicKey)
+  //   .accounts({
+  //     serviceAccount: servicePublicKey,
+  //     payer: wallet.publicKey, // payer for transaction
+  //     paymentStatus,
+  //     systemProgram: SystemProgram.programId,
+  //   })
+  //   .rpc({ commitment: "confirmed" });
+
   // Log the transaction signature
   console.log(
-    "Transaction Signature:",
+    "Payment completed with transaction signature:\n",
     `https://solana.fm/tx/${transactionSignature}?cluster=devnet-solana`
   );
-};
-
-const markAsPaid = async () => {
-  const servicePublicKey = new PublicKey(
-    "75zzvZ3uddQgzhhTFcYn3vXsZptaP9fmp4NKXHVt36pn"
-  );
-  const amount = new anchor.BN(100); // Example amount in lamports
-  const tx = await program.methods
-    .payForService(amount)
-    .accounts({
-      user: wallet.publicKey, // Bob's wallet
-      estelleAccount: ESTELLE_PUBKEY, // Estelle's wallet
-      serviceAccount: servicePublicKey,
-      paymentStatus: Keypair.generate().publicKey, // Generate a new keypair for payment status
-      systemProgram: SystemProgram.programId,
-    })
-    .rpc({ commitment: "confirmed" });
-
-  console.log("Payment completed with transaction signature:", tx);
 };
 
 // Execute the function

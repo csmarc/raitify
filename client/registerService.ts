@@ -1,13 +1,4 @@
-import {
-  LAMPORTS_PER_SOL,
-  Connection,
-  Keypair,
-  SystemProgram,
-  Transaction,
-  sendAndConfirmTransaction,
-  PublicKey,
-  clusterApiUrl,
-} from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 
 import * as anchor from "@project-serum/anchor";
 
@@ -23,8 +14,8 @@ const [servicePda, serviceBump] = PublicKey.findProgramAddressSync(
 );
 
 const registerService = async () => {
-  const description = "copywriting";
-  const price = new anchor.BN(100);
+  const description = "Copywriting";
+  const price = new anchor.BN(1000000);
   const transactionSignature = await program.methods
     .registerService(description, price)
     .accounts({
@@ -38,12 +29,13 @@ const registerService = async () => {
     "confirmed"
   );
 
-  console.log(JSON.stringify(servicePda, null, 2));
   console.log(
-    "Transaction Signature:",
+    `${description} service for ${price} lamports registered.\n PDA Public Key: ${servicePda.toBase58()}`
+  );
+  console.log(
+    "Transaction Signature:\n",
     `https://solana.fm/tx/${transactionSignature}?cluster=devnet-solana`
   );
-  console.log("Service PDA (Public Key):", servicePda.toBase58());
 };
 
 // Call the function
