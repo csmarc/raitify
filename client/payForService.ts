@@ -4,60 +4,111 @@ import {
   Transaction,
   sendAndConfirmTransaction,
   PublicKey,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-
 import * as anchor from "@project-serum/anchor";
 
 const wallet = pg.wallet;
 const program = pg.program;
-
 const sender = wallet.keypair;
 
-// MOCK escrow account
-const estellePubkey = new PublicKey(
-  "HFmEXcEenDYTuMdLrJ1mCYD9qH5S8yfCphKTGgyXLtXc"
-);
+// Define escrow program ID (replace with your actual program ID)
+const ESCROW_PROGRAM_ID = new PublicKey("Your_Escrow_Program_ID_Here");
 
-const lamports = 1000000;
+const createEscrow = async (amount: number, receiverPubkey: PublicKey) => {
+  const escrowAccount = Keypair.generate();
+  const lamports = amount * LAMPORTS_PER_SOL;
 
-const payForService = async () => {
-  // Create transfer instruction
-  const transferInstruction = SystemProgram.transfer({
+  const createEscrowIx = await program.methods
+    .createEscrow(new anchor.BN(lamports))
+    .accounts({
+      escrow: escrowAccount.publicKey,
+      sender: sender.publicKey,
+      receiver: receiverPubkey,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+
+  const transferToEscrowIx = SystemProgram.transfer({
     fromPubkey: sender.publicKey,
-    toPubkey: estellePubkey,
+    toPubkey: escrowAccount.publicKey,
     lamports,
   });
 
-  // Create transaction and add the transfer instruction
-  const transaction = new Transaction().add(transferInstruction);
+  const transaction = new Transaction().add(createEscrowIx, transferToEscrowIx);
 
-  // Send and confirm the transaction
-  const transactionSignature = await sendAndConfirmTransaction(
+  const txSignature = await sendAndConfirmTransaction(
     pg.connection,
     transaction,
-    [sender] // Signer array
+    [sender, escrowAccount]
   );
 
-  //MOCK Escrow marks service_id as paid
-  const servicePublicKey = new PublicKey(
-    "7Amm9JFWXYBbMcVbXQ1q68Hjt9fj3ZpWKkD6kdpHGsvW"
-  );
-  // const tx2 = await program.methods
-  //   .markServiceAsPaid(servicePublicKey)
-  //   .accounts({
-  //     serviceAccount: servicePublicKey,
-  //     payer: wallet.publicKey, // payer for transaction
-  //     paymentStatus,
-  //     systemProgram: SystemProgram.programId,
-  //   })
-  //   .rpc({ commitment: "confirmed" });
-
-  // Log the transaction signature
   console.log(
-    "Payment completed with transaction signature:\n",
-    `https://solana.fm/tx/${transactionSignature}?cluster=devnet-solana`
+    `Escrow created and funded: https://solana.fm/tx/${txSignature}?cluster=devnet-solana`
+  );
+  return escrowAccount.publicKey;
+};
+
+const completeEscrow = async (escrowPubkey: PublicKey) => {
+  const completeEscrowIx = await program.methods
+    .completeEscrow()
+    .accounts({
+      escrow: escrowPubkey,
+      sender: sender.publicKey,
+      receiver: receiverPubkey, // Assuming receiverPubkey is defined
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+
+  const transaction = new Transaction().add(completeEscrowIx);
+
+  const txSignature = await sendAndConfirmTransaction(
+    pg.connection,
+    transaction,
+    [sender]
+  );
+
+  console.log(
+    `Escrow completed: https://solana.fm/tx/${txSignature}?cluster=devnet-solana`
   );
 };
 
-// Execute the function
-payForService().catch(console.error);
+const cancelEscrow = async (escrowPubkey: PublicKey) => {
+  const cancelEscrowIx = await program.methods
+    .cancelEscrow()
+    .accounts({
+      escrow: escrowPubkey,
+      sender: sender.publicKey,
+      systemProgram: SystemProgram.programId,
+    })
+    .instruction();
+
+  const transaction = new Transaction().add(cancelEscrowIx);
+
+  const txSignature = await sendAndConfirmTransaction(
+    pg.connection,
+    transaction,
+    [sender]
+  );
+
+  console.log(
+    `Escrow cancelled: https://solana.fm/tx/${txSignature}?cluster=devnet-solana`
+  );
+};
+
+// Example usage
+const main = async () => {
+  const receiverPubkey = new PublicKey("Receiver_Public_Key_Here");
+  const escrowPubkey = await createEscrow(1, receiverPubkey); // Create escrow with 1 SOL
+
+  // Simulate some time passing or condition met
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  // Complete the escrow
+  await completeEscrow(escrowPubkey);
+
+  // Or cancel the escrow if needed
+  // await cancelEscrow(escrowPubkey);
+};
+
+main().catch(console.error);
